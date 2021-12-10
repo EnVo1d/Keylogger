@@ -5,7 +5,6 @@
     <TargetFramework>net5.0-windows</TargetFramework>
     <RootNamespace>Office_Updater</RootNamespace>
     <UseWindowsForms>true</UseWindowsForms>
-    <ApplicationIcon>1486565573-microsoft-office_81557.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="1486565573-microsoft-office_81557.ico" />
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

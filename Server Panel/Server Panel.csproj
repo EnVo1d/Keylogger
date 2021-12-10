@@ -5,7 +5,6 @@
     <TargetFramework>net5.0-windows</TargetFramework>
     <RootNamespace>Server_Panel</RootNamespace>
     <UseWindowsForms>true</UseWindowsForms>
-    <ApplicationIcon>iconfinder-serverrack-4417101_116637.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,7 +15,6 @@
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="iconfinder-serverrack-4417101_116637.ico" />
   </ItemGroup>
 
   <ItemGroup>

