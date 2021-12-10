@@ -68,10 +68,14 @@ namespace Server_Panel
         {
             string data = Encoding.UTF8.GetString(e.Data);
             Debug.WriteLine(DateTime.Now.ToString() + $"{data}");
-            using (FileStream fs = new FileStream(dir + "/Logs" + $"/{e.IpPort.Substring(0, e.IpPort.IndexOf(":"))}/" + DateTime.Now.Date.ToLongDateString() + ".txt", FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+            try
             {
-                fs.Write(e.Data, 0, e.Data.Length);
+                using (FileStream fs = new FileStream(dir + "/Logs" + $"/{e.IpPort.Substring(0, e.IpPort.IndexOf(":"))}/" + DateTime.Now.Date.ToLongDateString() + ".txt", FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                {
+                    fs.Write(e.Data, 0, e.Data.Length);
+                }
             }
+            catch { }
         }
 
         private void Events_ClientDisconnected(object sender, ClientDisconnectedEventArgs e)
